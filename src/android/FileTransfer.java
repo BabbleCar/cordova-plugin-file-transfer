@@ -32,6 +32,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLConnection;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -835,6 +836,10 @@ public class FileTransfer extends CordovaPlugin {
                         }
                         inputStream = new SimpleTrackingInputStream(readResult.inputStream);
                     } else {
+                        Uri currentSourceUri = sourceUri;
+                           
+                        while (true)
+                        {
                         // connect to server
                         // Open a HTTP connection to the URL based on protocol
                         connection = resourceApi.createHttpConnection(sourceUri);
@@ -851,7 +856,7 @@ public class FileTransfer extends CordovaPlugin {
                         connection.setRequestMethod("GET");
 
                         // TODO: Make OkHttp use this CookieManager by default.
-                        String cookie = getCookies(sourceUri.toString());
+                        String cookie = getCookies(currentSourceUri.toString());
 
                         if(cookie != null)
                         {
@@ -866,7 +871,18 @@ public class FileTransfer extends CordovaPlugin {
                             addHeadersToRequest(connection, headers);
                         }
 
-                        connection.connect();
+                            connection.connect();
+                              
+                            if (connection.getResponseCode() == HttpURLConnection.HTTP_MOVED_PERM ||
+                                connection.getResponseCode() == HttpURLConnection.HTTP_MOVED_TEMP) {
+                                String location = connection.getHeaderField("Location");
+                                URL base  = new URL(currentSourceUri.toString());
+                                URL next  = new URL(base, location);  // Deal with relative URLs
+                                currentSourceUri = Uri.parse(next.toString());
+                                continue;
+                            }
+                            break;
+                        }
                         if (connection.getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
                             cached = true;
                             connection.disconnect();
