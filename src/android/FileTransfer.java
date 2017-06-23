@@ -837,12 +837,14 @@ public class FileTransfer extends CordovaPlugin {
                         inputStream = new SimpleTrackingInputStream(readResult.inputStream);
                     } else {
                         Uri currentSourceUri = sourceUri;
-                           
+
                         while (true)
                         {
+
+                        LOG.d(LOG_TAG, "url : " + currentSourceUri);
                         // connect to server
                         // Open a HTTP connection to the URL based on protocol
-                        connection = resourceApi.createHttpConnection(sourceUri);
+                        connection = resourceApi.createHttpConnection(currentSourceUri);
                         if (useHttps && trustEveryone) {
                             // Setup the HTTPS connection class to trust everyone
                             HttpsURLConnection https = (HttpsURLConnection)connection;
@@ -872,7 +874,7 @@ public class FileTransfer extends CordovaPlugin {
                         }
 
                             connection.connect();
-                              
+
                             if (connection.getResponseCode() == HttpURLConnection.HTTP_MOVED_PERM ||
                                 connection.getResponseCode() == HttpURLConnection.HTTP_MOVED_TEMP) {
                                 String location = connection.getHeaderField("Location");
